@@ -14,10 +14,20 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField]
     private bool isGrounded;
 
+    [SerializeField]
+    private bool canShoot;
+    [SerializeField]
+    private float shootCoolDown;
+
+    public Transform leftBulletSpawn;
+    public Transform rightBulletSpawn;
+    public GameObject bulletFireBall;
+
     // Start is called before the first frame update
     void Start()
     {
-        //isGrounded = false;
+        canShoot = true;
+        shootCoolDown = 0.2f;
     }
 
     // Update is called once per frame
@@ -27,7 +37,39 @@ public class PlayerMovement : MonoBehaviour
         Movement();
         //MovementByAxis();
         AccelerateFalling();
+        Shooting();
 
+        shootCoolDown -= Time.deltaTime;
+        if (shootCoolDown < 0) {
+            canShoot = true;
+            animCharacter.SetBool("isShoot", false);
+        }
+    }
+
+    private void Shooting() {
+        if (Input.GetMouseButtonDown(0)) {
+
+            if (canShoot) {
+                //shoot!
+                if (srCharacter.flipX) {
+                    //shoot right
+                    GameObject rightFireBall = Instantiate(bulletFireBall, rightBulletSpawn.transform.position, Quaternion.identity);
+                    //rightFireBall.GetComponent<Rigidbody2D>().velocity = Vector2.right * 1000;
+                    rightFireBall.GetComponent<Rigidbody2D>().velocity = new Vector2(50, 10);
+                } else {
+                    //shoot left
+                    GameObject leftFireBall = Instantiate(bulletFireBall, leftBulletSpawn.transform.position, Quaternion.identity);
+                    //leftFireBall.GetComponent<Rigidbody2D>().velocity = Vector2.left * 1000;
+                    leftFireBall.GetComponent<Rigidbody2D>().velocity = new Vector2(-50, 10);
+
+                }
+
+                animCharacter.SetBool("isShoot", true);
+                canShoot = false;
+                shootCoolDown = 0.2f;
+
+            }
+        }
     }
 
     private void AccelerateFalling() {
@@ -45,12 +87,14 @@ public class PlayerMovement : MonoBehaviour
             transform.Translate(new Vector2(speed * Time.deltaTime, 0));
             srCharacter.flipX = true;
             animCharacter.SetBool("isRun", true);
+            animCharacter.SetBool("isShoot", false);
 
         } else if (Input.GetKey(KeyCode.A)) {
             //move left
             transform.Translate(new Vector2(-speed * Time.deltaTime, 0));
             srCharacter.flipX = false;
             animCharacter.SetBool("isRun", true);
+            animCharacter.SetBool("isShoot", false);
 
         } else if (Input.GetKeyDown(KeyCode.Space)) {
             //jump
